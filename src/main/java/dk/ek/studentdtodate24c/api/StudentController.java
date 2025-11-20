@@ -1,6 +1,8 @@
 package dk.ek.studentdtodate24c.api;
 
 
+import dk.ek.studentdtodate24c.dto.StudentRequestDTO;
+import dk.ek.studentdtodate24c.dto.StudentResponseDTO;
 import dk.ek.studentdtodate24c.model.Student;
 import dk.ek.studentdtodate24c.service.StudentService;
 import org.springframework.http.HttpStatus;
@@ -21,14 +23,14 @@ public class StudentController {
     }
 
     @GetMapping
-    public List<Student> getAllStudents() {
-        return studentService.getAllStudents();
+    public ResponseEntity<List<StudentResponseDTO>> getAllStudents() {
+        return ResponseEntity.ok(studentService.getAllStudents());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
+    public ResponseEntity<StudentResponseDTO> getStudentById(@PathVariable Long id) {
         try {
-            Student student = studentService.getStudentById(id);
+            StudentResponseDTO student = studentService.getStudentById(id);
             return new ResponseEntity<>(student, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -36,15 +38,15 @@ public class StudentController {
     }
 
     @PostMapping
-    public ResponseEntity<Student> createStudent(@RequestBody Student studentRequest) {
-        Student newStudent = studentService.createStudent(studentRequest);
+    public ResponseEntity<StudentResponseDTO> createStudent(@RequestBody StudentRequestDTO studentRequest) {
+        StudentResponseDTO newStudent = studentService.createStudent(studentRequest);
         return new ResponseEntity<>(newStudent, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @RequestBody Student studentRequest) {
+    public ResponseEntity<StudentResponseDTO> updateStudent(@PathVariable Long id, @RequestBody StudentRequestDTO studentRequest) {
         try {
-            Student updatedStudent = studentService.updateStudent(id, studentRequest);
+            StudentResponseDTO updatedStudent = studentService.updateStudent(id, studentRequest);
             return new ResponseEntity<>(updatedStudent, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

@@ -1,6 +1,9 @@
 package dk.ek.studentdtodate24c.service;
 
 
+import dk.ek.studentdtodate24c.dto.StudentRequestDTO;
+import dk.ek.studentdtodate24c.dto.StudentResponseDTO;
+import dk.ek.studentdtodate24c.mapper.StudentMapper;
 import dk.ek.studentdtodate24c.model.Student;
 import dk.ek.studentdtodate24c.repository.StudentRepository;
 import org.springframework.stereotype.Service;
@@ -13,25 +16,29 @@ import java.util.Optional;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+    private final StudentMapper studentMapper;
 
     // Constructor injection
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository, StudentMapper studentMapper) {
         this.studentRepository = studentRepository;
+        this.studentMapper = studentMapper;
     }
 
-    public List<Student> getAllStudents() {
+    public List<StudentResponseDTO> getAllStudents() {
         List<Student> students = studentRepository.findAll();
-        List<Student> studentResponses = new ArrayList<>();
+
 
         // Using a for-loop to convert each Student to a StudentResponseDTO
 
-        students.stream().forEach(studentResponses::add);
+        List<StudentResponseDTO> studentResponses = students.stream()
+                .map(studentMapper::toStudentResponseDTO)
+                .toList();
 
         return studentResponses;
     }
 
-    public Student getStudentById(Long id) {
-        Optional<Student> optionalStudent = studentRepository.findById(id);
+    public StudentResponseDTO getStudentById(Long id) {
+        /*Optional<Student> optionalStudent = studentRepository.findById(id);
 
         // Throw RuntimeException if student is not found
         if (optionalStudent.isEmpty()) {
@@ -40,32 +47,42 @@ public class StudentService {
 
         Student studentResponse = optionalStudent.get();
 
-        return studentResponse;
+        return studentResponse;*/
+        Student student = studentRepository
+                .findById(id)
+                .orElseThrow(
+                        () -> new RuntimeException("Student with id " + id + " not found")
+                );
+
+        return studentMapper.toStudentResponseDTO(student);
 
     }
 
-    public Student createStudent(Student studentRequest) {
-        Student studentResponse = studentRepository.save(studentRequest);
+    public StudentResponseDTO createStudent(StudentRequestDTO studentRequest) {
+        Student studentToSave = studentMapper.toStudent(studentRequest);
+        Student studentResponse = studentRepository.save(studentToSave);
 
-        return studentResponse;
+        return studentMapper.toStudentResponseDTO(studentResponse);
     }
 
-    public Student updateStudent(Long id, Student studentRequest) {
+    public StudentResponseDTO updateStudent(Long id, StudentRequestDTO studentRequest) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         // Throw RuntimeException if student is not found
         if (optionalStudent.isEmpty()) {
             throw new RuntimeException("Student not found with id " + id);
         }
 
-        Student student = optionalStudent.get();
+        Student studentToUpdate = optionalStudent.get();
 
-        student.setName(studentRequest.getName());
-        student.setPassword(studentRequest.getPassword());
-        student.setBornDate(studentRequest.getBornDate());
-        student.setBornTime(studentRequest.getBornTime());
+        Student updateInfo = studentMapper.toStudent(studentRequest);
+        studentToUpdate.setName(updateInfo.getName());
+        studentToUpdate.setPassword(updateInfo.getPassword());
+        studentToUpdate.setBornDate(updateInfo.getBornDate());
+        studentToUpdate.setBornTime(updateInfo.getBornTime());
 
-        Student studentResponse = studentRepository.save(student);
-        return studentResponse;
+
+        Student studentResponse = studentRepository.save(studentToUpdate);
+        return studentMapper.toStudentResponseDTO(studentResponse);
     }
 
     public void deleteStudent(Long id) {
